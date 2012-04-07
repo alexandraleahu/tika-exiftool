@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.namespace.QName;
@@ -63,12 +62,7 @@ public abstract class AbstractExiftoolMetadataExtractor {
 	 */
 	private static final Log logger = LogFactory.getLog(AbstractExiftoolMetadataExtractor.class);
 
-	private static final String DEFAULT_EXIFTOOL_EXECUTABLE = "exiftool";
 	private static final String DEFAULT_CHARSET = "UTF-8";
-
-	private static final String PROPERTIES_OVERRIDE_FILE = "tika.exiftool.override.properties";
-    private static final String PROPERTIES_FILE = "tika.exiftool.properties";
-    private static final String PROPERTY_EXIFTOOL_EXECUTABLE = "exiftool.executable";
 
     private final Metadata metadata;
     private final Set<MediaType> supportedTypes;
@@ -90,34 +84,6 @@ public abstract class AbstractExiftoolMetadataExtractor {
     	}
     }
 
-    /**
-     * Gets the command line executable path for exiftool.
-     *
-     * The command is fetched from a property file named "tika.exiftool.properties"
-     * If a file called "tika.exiftool.override.properties" is found on classpath, this is used instead
-     */
-	public final String getExiftoolExecutable() {
-		if (runtimeExiftoolExecutable != null) {
-			return runtimeExiftoolExecutable;
-		}
-		String executable = DEFAULT_EXIFTOOL_EXECUTABLE;
-		InputStream stream;
-        stream = this.getClass().getResourceAsStream(PROPERTIES_OVERRIDE_FILE);
-        if (stream == null) {
-            stream = this.getClass().getResourceAsStream(PROPERTIES_FILE);
-        }
-        if(stream != null){
-            try {
-            	Properties props = new Properties();
-                props.load(stream);
-                executable = (String) props.get(PROPERTY_EXIFTOOL_EXECUTABLE);
-            } catch (IOException e) {
-            	logger.warn("IOException while trying to load property file. Message: " + e.getMessage());
-            }
-        }
-        return executable;
-	}
-
 
 	/**
 	 * Gets an ExifTool {@link ExternalParser} to do the work of extracting the metadata in the
@@ -127,7 +93,10 @@ public abstract class AbstractExiftoolMetadataExtractor {
 	 */
 	protected Parser getFileParser() {
 		ExternalParser parser = new ExternalParser();
-    	parser.setCommand(new String[] { getExiftoolExecutable(), "-X", ExternalParser.INPUT_FILE_TOKEN });
+    	parser.setCommand(new String[] { 
+    			ExecutableUtils.getExiftoolExecutable(runtimeExiftoolExecutable), 
+    			"-X", 
+    			ExternalParser.INPUT_FILE_TOKEN });
     	parser.setSupportedTypes(supportedTypes);
     	return parser;
 	}
@@ -185,27 +154,12 @@ public abstract class AbstractExiftoolMetadataExtractor {
 	 * @param exiftoolProperty
 	 * @return the full QName for the property
 	 */
-	public static QName getQName(Property exiftoolProperty) {
+	public QName getQName(Property exiftoolProperty) {
 		String prefix = null;
 		String namespaceUrl = null;
-		if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_IPTC)) {
-			prefix = ExifToolMetadata.PREFIX_IPTC;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_IPTC;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_DC)) {
+		if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_DC)) {
 			prefix = ExifToolMetadata.PREFIX_XMP_DC;
 			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_DC;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_CORE)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_IPTC_CORE;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_CORE;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_EXT)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_IPTC_EXT;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_EXT;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PHOTOSHOP)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_PHOTOSHOP;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PHOTOSHOP;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PLUS)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_PLUS;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PLUS;
 		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_XMP_RIGHTS)) {
 			prefix = ExifToolMetadata.PREFIX_XMP_XMP_RIGHTS;
 			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_XMP_RIGHTS;
@@ -226,6 +180,21 @@ public abstract class AbstractExiftoolMetadataExtractor {
 	public abstract class AbstractExiftoolXmlParser extends XMLParser {
 
 		private static final long serialVersionUID = 4937561608422796636L;
+		
+		private ExiftoolTikaMapper exiftoolTikaMapper;
+		
+		public AbstractExiftoolXmlParser(ExiftoolTikaMapper exiftoolTikaMapper) {
+			super();
+			this.exiftoolTikaMapper = exiftoolTikaMapper;
+		}
+
+		public ExiftoolTikaMapper getExiftoolTikaMapper() {
+			return exiftoolTikaMapper;
+		}
+
+		public void setExiftoolTikaMapper(ExiftoolTikaMapper exiftoolTikaMapper) {
+			this.exiftoolTikaMapper = exiftoolTikaMapper;
+		}
 
 		/**
 		 * Gets an element handler for the given <code>Property</code> and <code>QName</code>.
@@ -262,10 +231,10 @@ public abstract class AbstractExiftoolMetadataExtractor {
 		 */
 		protected Collection<ContentHandler> getElementMetadataHandlers(Property property, Metadata metadata) {
 			ArrayList<ContentHandler> handlers = new ArrayList<ContentHandler>();
-			QName qName = AbstractExiftoolMetadataExtractor.getQName(property);
+			QName qName = getQName(property);
 			if (qName != null) {
-				if (ExiftoolTikaMapper.getExiftoolToTikaMetadataMap().get(property) != null) {
-					for (Object tikaMetadata : ExiftoolTikaMapper.getExiftoolToTikaMetadataMap().get(property)) {
+				if (getExiftoolTikaMapper().getExiftoolToTikaMetadataMap().get(property) != null) {
+					for (Object tikaMetadata : getExiftoolTikaMapper().getExiftoolToTikaMetadataMap().get(property)) {
 						handlers.add(getElementMetadataHandler(property, metadata, qName, tikaMetadata));
 					}
 				} else {

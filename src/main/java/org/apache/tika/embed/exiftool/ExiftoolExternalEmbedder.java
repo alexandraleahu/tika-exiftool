@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.tika.embed.ExternalEmbedder;
 import org.apache.tika.metadata.Property;
-import org.apache.tika.parser.exiftool.ExiftoolIptcMetadataExtractor;
+import org.apache.tika.parser.exiftool.ExecutableUtils;
 import org.apache.tika.parser.exiftool.ExiftoolTikaMapper;
 import org.apache.tika.parser.external.ExternalParser;
 
@@ -42,18 +42,22 @@ public class ExiftoolExternalEmbedder extends ExternalEmbedder {
 	private static final String COMMAND_APPEND_OPERATOR = "+=";
 	
 	private final String runtimeExiftoolExecutable;
+	
+	private final ExiftoolTikaMapper exiftoolTikaMapper;
 
 	/**
 	 * Default constructor
 	 */
-	public ExiftoolExternalEmbedder() {
+	public ExiftoolExternalEmbedder(ExiftoolTikaMapper exiftoolTikaMapper) {
 		super();
+		this.exiftoolTikaMapper = exiftoolTikaMapper;
 		this.runtimeExiftoolExecutable = null;
 		init();
 	}
 	
-	public ExiftoolExternalEmbedder(String runtimeExiftoolExecutable) {
+	public ExiftoolExternalEmbedder(ExiftoolTikaMapper exiftoolTikaMapper, String runtimeExiftoolExecutable) {
 		super();
+		this.exiftoolTikaMapper = exiftoolTikaMapper;
 		this.runtimeExiftoolExecutable = runtimeExiftoolExecutable;
 		init();
 	}
@@ -64,8 +68,8 @@ public class ExiftoolExternalEmbedder extends ExternalEmbedder {
 	public void init() {
 		// Convert the exiftool metadata names into command line arguments
 		Map<String, String[]> metadataCommandArguments = new HashMap<String, String[]>();
-		for (Object tikaMetadata : ExiftoolTikaMapper.getTikaToExiftoolMetadataMap().keySet()) {
-			List<Property> exiftoolMetadataNames = ExiftoolTikaMapper.getTikaToExiftoolMetadataMap().get(tikaMetadata);
+		for (Object tikaMetadata : exiftoolTikaMapper.getTikaToExiftoolMetadataMap().keySet()) {
+			List<Property> exiftoolMetadataNames = exiftoolTikaMapper.getTikaToExiftoolMetadataMap().get(tikaMetadata);
 			String[] exiftoolCommandArguments = new String[exiftoolMetadataNames.size()];
 			for (int i = 0; i < exiftoolMetadataNames.size(); i++) {
 				exiftoolCommandArguments[i] = "-" + exiftoolMetadataNames.get(i).getName();
@@ -79,7 +83,8 @@ public class ExiftoolExternalEmbedder extends ExternalEmbedder {
 		}
 		setMetadataCommandArguments(metadataCommandArguments);
 		
-		setExiftoolExecutable((new ExiftoolIptcMetadataExtractor(null, null, runtimeExiftoolExecutable)).getExiftoolExecutable());
+		setExiftoolExecutable(
+				ExecutableUtils.getExiftoolExecutable(runtimeExiftoolExecutable));
 		setCommandAppendOperator(COMMAND_APPEND_OPERATOR);
 	}
 

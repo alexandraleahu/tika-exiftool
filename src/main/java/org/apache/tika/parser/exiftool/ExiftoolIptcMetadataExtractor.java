@@ -21,6 +21,8 @@ package org.apache.tika.parser.exiftool;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.namespace.QName;
+
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
@@ -51,7 +53,38 @@ public class ExiftoolIptcMetadataExtractor extends AbstractExiftoolMetadataExtra
 	 */
 	@Override
 	protected Parser getXmlResponseParser() {
-		return new ExiftoolIptcXmlParser();
+		return new ExiftoolIptcXmlParser(new ExiftoolTikaIptcMapper());
+	}
+	
+	@Override
+	public QName getQName(Property exiftoolProperty) {
+		QName qName = super.getQName(exiftoolProperty);
+		if (qName != null) {
+			return qName;
+		}
+		
+		String prefix = null;
+		String namespaceUrl = null;
+		if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_IPTC)) {
+			prefix = ExifToolMetadata.PREFIX_IPTC;
+			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_IPTC;
+		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_CORE)) {
+			prefix = ExifToolMetadata.PREFIX_XMP_IPTC_CORE;
+			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_CORE;
+		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_EXT)) {
+			prefix = ExifToolMetadata.PREFIX_XMP_IPTC_EXT;
+			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_EXT;
+		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PHOTOSHOP)) {
+			prefix = ExifToolMetadata.PREFIX_XMP_PHOTOSHOP;
+			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PHOTOSHOP;
+		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PLUS)) {
+			prefix = ExifToolMetadata.PREFIX_XMP_PLUS;
+			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PLUS;
+		}
+		if (prefix != null && namespaceUrl != null) {
+			return new QName(namespaceUrl, exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, ""), prefix);
+		}
+		return null;
 	}
 
 	/**
@@ -64,6 +97,10 @@ public class ExiftoolIptcMetadataExtractor extends AbstractExiftoolMetadataExtra
 	public class ExiftoolIptcXmlParser extends AbstractExiftoolXmlParser {
 
 		private static final long serialVersionUID = -8633426227113109506L;
+		
+		public ExiftoolIptcXmlParser(ExiftoolTikaMapper exiftoolTikaMapper) {
+			super(exiftoolTikaMapper);
+		}
 
 		@Override
 	    protected ContentHandler getContentHandler(

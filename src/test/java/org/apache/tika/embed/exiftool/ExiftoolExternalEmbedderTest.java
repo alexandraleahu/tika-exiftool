@@ -27,6 +27,7 @@ import org.apache.tika.metadata.IPTC;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.exiftool.ExiftoolImageParser;
+import org.apache.tika.parser.exiftool.ExiftoolTikaIptcMapper;
 
 
 import junit.framework.Test;
@@ -93,7 +94,7 @@ public class ExiftoolExternalEmbedderTest
 
     @Override
     protected Embedder getEmbedder() {
-    	return new ExiftoolExternalEmbedder();
+    	return new ExiftoolExternalEmbedder(new ExiftoolTikaIptcMapper());
     }
 
     @Override
