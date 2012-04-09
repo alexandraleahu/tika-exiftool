@@ -1,8 +1,8 @@
 Overview
 ========
 
-tika-exifool is an (Apache Tika)[http://tika.apache.org/] external parser
-which invokes the command line (ExifTool)[http://www.sno.phy.queensu.ca/~phil/exiftool/]
+tika-exifool is an [Apache Tika](http://tika.apache.org/) external parser
+which invokes the command line [ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
 and can map the output to specific Tika metadata fields.
 
 An IPTC extractor and mapping to Tika's IPTC metadata is provided.
