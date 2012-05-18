@@ -129,7 +129,7 @@ public class ExifToolImageParserTest extends TestCase {
         for (String name : metadata.names()) {
         	logger.trace("TIFF-- " + name + "=" + metadata.get(name));
 		}
-        List<String> iptcKeywords = Arrays.asList(metadata.getValues(Metadata.DC_SUBJECT.getName()));
+        List<String> iptcKeywords = Arrays.asList(metadata.getValues(IPTC.KEYWORDS));
         assertTrue(iptcKeywords.contains("garden"));
         assertTrue(iptcKeywords.contains("cat"));
         assertEquals("Cat in a garden", metadata.get(IPTC.HEADLINE));
