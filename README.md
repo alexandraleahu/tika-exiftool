@@ -13,7 +13,3 @@ Requirements
 
 ExifTool must be installed.  You can specify the full path to the command line in 
 `tika.exiftool.properties` or `tika.exiftool.override.properties`.
-
-The parser and embedder rely on code that has been contributed to the Apache Tika project
-but at the time of this writing has not been committed.  For convenience the patched
-tika-core and tika-parser jars are included in `/lib`.
