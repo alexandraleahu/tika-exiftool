@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.tika.embed;
+package org.apache.tika.embedder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -25,52 +26,47 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
 
 /**
  * Tika embedder interface
  *
- * @author rgauss
- *
+ * @since Apache Tika 1.3
  */
 public interface Embedder extends Serializable {
 
     /**
-     * Returns the set of media types supported by this embedder when used
-     * with the given parse context.
+     * Returns the set of media types supported by this embedder when used with
+     * the given parse context.
+     * <p>
+     * The name differs from the precedence of {@link Parser#getSupportedTypes(ParseContext)}
+     * so that parser implementations may also choose to implement this interface.
      *
      * @param context parse context
      * @return immutable set of media types
      */
-    Set<MediaType> getSupportedTypes(ParseContext context);
+    Set<MediaType> getSupportedEmbedTypes(ParseContext context);
 
     /**
-     * Embeds related document metadata from the given metadata object into the given output stream.
+     * Embeds related document metadata from the given metadata object into the
+     * given output stream.
      * <p>
-     * The given document stream is consumed but not closed by this method.
-     * The responsibility to close the stream remains on the caller.
+     * The given document stream is consumed but not closed by this method. The
+     * responsibility to close the stream remains on the caller.
      * <p>
      * Information about the parsing context can be passed in the context
      * parameter. See the parser implementations for the kinds of context
      * information they expect.
      *
-     * @param originalStream the document stream (input)
      * @param metadata document metadata (input and output)
+     * @param originalStream the document stream (input)
+     * @param outputStream the output stream to write the metadata embedded data to
      * @param context parse context
-     * @return the document stream (input) after metadata has been embedded
      * @throws IOException if the document stream could not be read
      * @throws TikaException if the document could not be parsed
      */
-    /**
-     * @param originalStream
-     * @param metadata
-     * @param context
-     * @return the metadata embedded document stream
-     * @throws IOException
-     * @throws TikaException
-     */
-    InputStream embed(
-            InputStream originalStream,
-            Metadata metadata, ParseContext context)
+    void embed(Metadata metadata, InputStream originalStream,
+            OutputStream outputStream, ParseContext context)
             throws IOException, TikaException;
 
 }

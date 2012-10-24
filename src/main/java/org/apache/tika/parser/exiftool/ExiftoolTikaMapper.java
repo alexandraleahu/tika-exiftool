@@ -6,7 +6,7 @@ import java.util.Map;
 import org.apache.tika.metadata.Property;
 
 public interface ExiftoolTikaMapper {
-	
+
     /**
      * Gets a map of Tika metadata names to an array of ExifTool metadata names. Most
      * useful for constructing command line arguments.
@@ -18,14 +18,14 @@ public interface ExiftoolTikaMapper {
      *
      * @return the map of Tika metadata names to ExifTool names
      */
-	public Map<Object, List<Property>> getTikaToExiftoolMetadataMap();
-	
-	/**
-	 * Gets a map of ExifTool metadata names to a single Tika metadata name. Most
-	 * useful for parsers.
-	 *
-	 * @return the map of ExifTool metadata names to Tika names
-	 */
-	public Map<Property, List<Object>> getExiftoolToTikaMetadataMap();
+    public Map<Property, List<Property>> getTikaToExiftoolMetadataMap();
+
+    /**
+     * Gets a map of ExifTool metadata names to a single Tika metadata name. Most
+     * useful for parsers.
+     *
+     * @return the map of ExifTool metadata names to Tika names
+     */
+    public Map<Property, List<Property>> getExiftoolToTikaMetadataMap();
 
 }
