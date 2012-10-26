@@ -16,6 +16,7 @@
  */
 package org.apache.tika.embedder;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +31,6 @@ import java.util.Set;
 
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.IOUtils;
-import org.apache.tika.io.NullOutputStream;
 import org.apache.tika.io.TemporaryResources;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
@@ -370,8 +370,10 @@ public class ExternalEmbedder implements Embedder {
             process = Runtime.getRuntime().exec(cmd.toArray(new String[] {}));
         }
 
+        ByteArrayOutputStream stdErrOutputStream = new ByteArrayOutputStream();
+
         try {
-            ignoreStdErr(process);
+            sendStdErrToOutputStream(process, stdErrOutputStream);
 
             if (inputToStdIn) {
                 sendInputStreamToStdIn(inputStream, process);
@@ -391,7 +393,6 @@ public class ExternalEmbedder implements Embedder {
                 // The command is finished, read the output file into the given output stream
                 InputStream tempOutputFileInputStream = TikaInputStream.get(tempOutputFile);
                 IOUtils.copy(tempOutputFileInputStream, outputStream);
-//                multiThreadedStreamCopy(tempFileInputStream, outputStream);
             }
         } finally {
             if (outputFromStdOut) {
@@ -411,8 +412,13 @@ public class ExternalEmbedder implements Embedder {
                 tikaInputStream.getFile().delete();
             }
             IOUtils.closeQuietly(outputStream);
+            IOUtils.closeQuietly(stdErrOutputStream);
+            if (process.exitValue() != 0) {
+                throw new TikaException("There was an error executing the command line" +
+                        "\nExecutable Command:\n\n" + cmd +
+                        "\nExecutable Error:\n\n" + stdErrOutputStream.toString("UTF-8"));
+            }
         }
-
     }
 
     /**
@@ -459,7 +465,7 @@ public class ExternalEmbedder implements Embedder {
      * Note that the given output stream is <em>not</em> closed by this method.
      *
      * @param process the process
-     * @param stream the input stream to send to standard input of the process
+     * @param outputStream the putput stream to send to standard input of the process
      */
     private void sendStdOutToOutputStream(
             final Process process,
@@ -477,9 +483,12 @@ public class ExternalEmbedder implements Embedder {
      * stream is closed once fully processed.
      *
      * @param process the process
+     * param outputStream the output stream to send to standard error of the process
      */
-    private void ignoreStdErr(final Process process) {
-        multiThreadedStreamCopy(process.getErrorStream(), new NullOutputStream());
+    private void sendStdErrToOutputStream(
+            final Process process,
+            final OutputStream outputStream) {
+        multiThreadedStreamCopy(process.getErrorStream(), outputStream);
     }
 
     /**

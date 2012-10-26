@@ -208,7 +208,6 @@ public class ExternalEmbedderTest extends TestCase {
                         // just check that the entire output contains the expected string
                         foundExpectedValue = outputString.contains(expectedValue);
                     } else {
-                        //
                         if (embeddedMetadata.isMultiValued(metadataName)) {
                             for (String embeddedValue : embeddedMetadata.getValues(metadataName)) {
                                 logger.debug("embedded values of '"

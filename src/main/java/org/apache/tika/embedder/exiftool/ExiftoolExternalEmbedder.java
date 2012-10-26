@@ -90,7 +90,7 @@ public class ExiftoolExternalEmbedder extends ExternalEmbedder {
      */
     public void setExiftoolExecutable(String exiftoolExecutable) {
         String[] cmd = new String[] { exiftoolExecutable, "-v0",
-                "-o", ExternalParser.OUTPUT_FILE_TOKEN,
+                "-o", ExternalParser.OUTPUT_FILE_TOKEN, "-m",
                 ExternalEmbedder.METADATA_COMMAND_ARGUMENTS_TOKEN,
                 ExternalParser.INPUT_FILE_TOKEN };
         setCommand(cmd);
