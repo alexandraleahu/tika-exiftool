@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2012 Alfresco Software Limited.
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,6 +19,7 @@
 package org.apache.tika.embedder.exiftool;
 
 import java.io.InputStream;
+import java.util.Date;
 
 import org.apache.tika.embedder.Embedder;
 import org.apache.tika.embedder.ExternalEmbedderTest;
@@ -34,9 +35,9 @@ import junit.framework.TestSuite;
 
 /**
  * Unit test for the ExiftoolExternalEmbedder
- * 
+ *
  * @author rgauss
- * 
+ *
  */
 public class ExiftoolExternalEmbedderTest extends ExternalEmbedderTest {
 
@@ -44,7 +45,7 @@ public class ExiftoolExternalEmbedderTest extends ExternalEmbedderTest {
 
     /**
      * Create the test case
-     * 
+     *
      * @param testName
      *            name of the test case
      */
@@ -60,23 +61,23 @@ public class ExiftoolExternalEmbedderTest extends ExternalEmbedderTest {
     }
 
     @Override
-    protected org.apache.tika.metadata.Metadata getMetadataToEmbed() {
+    protected org.apache.tika.metadata.Metadata getMetadataToEmbed(Date timestamp) {
         Metadata metadataToEmbed = new Metadata();
 
         metadataToEmbed.add(IPTC.COPYRIGHT_NOTICE.getName(),
-                getExpectedMetadataValueString(IPTC.COPYRIGHT_NOTICE.getName()));
+                getExpectedMetadataValueString(IPTC.COPYRIGHT_NOTICE.getName(), timestamp));
         metadataToEmbed.add(IPTC.DESCRIPTION.getName(),
-                getExpectedMetadataValueString(IPTC.DESCRIPTION.getName()));
+                getExpectedMetadataValueString(IPTC.DESCRIPTION.getName(), timestamp));
         metadataToEmbed.add(IPTC.CREDIT_LINE.getName(),
-                getExpectedMetadataValueString(IPTC.CREDIT_LINE.getName()));
+                getExpectedMetadataValueString(IPTC.CREDIT_LINE.getName(), timestamp));
         metadataToEmbed.add(IPTC.KEYWORDS.getName(),
-                EXPECTED_METADATA_PREFIX + "keyword1");
+                this.getClass().getSimpleName() + "_keyword1");
         metadataToEmbed.add(IPTC.KEYWORDS.getName(),
-                EXPECTED_METADATA_PREFIX + "keyword2");
+                this.getClass().getSimpleName() + "_keyword2");
         metadataToEmbed.add(IPTC.CONTACT_INFO_EMAIL.getName(),
-                getExpectedMetadataValueString(IPTC.CONTACT_INFO_EMAIL.getName()));
+                getExpectedMetadataValueString(IPTC.CONTACT_INFO_EMAIL.getName(), timestamp));
         metadataToEmbed.add(IPTC.ARTWORK_OR_OBJECT_DETAIL_TITLE.getName(),
-                getExpectedMetadataValueString(IPTC.ARTWORK_OR_OBJECT_DETAIL_TITLE.getName()));
+                getExpectedMetadataValueString(IPTC.ARTWORK_OR_OBJECT_DETAIL_TITLE.getName(), timestamp));
 
         return metadataToEmbed;
     }

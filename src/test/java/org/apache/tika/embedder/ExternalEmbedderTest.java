@@ -26,6 +26,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,11 +58,10 @@ public class ExternalEmbedderTest extends TestCase {
     private static final Log logger = LogFactory
             .getLog(ExternalEmbedderTest.class);
 
-    protected static final String EXPECTED_METADATA_PREFIX = "TIKA-EMBEDDED: ";
+    protected static final DateFormat EXPECTED_METADATA_DATE_FORMATTER =
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     protected static final String DEFAULT_CHARSET = "UTF-8";
     private static final String COMMAND_METADATA_ARGUMENT_DESCRIPTION = "dc:description";
-    private static final String EXPECTED_APPENDED_METADATA =
-            EXPECTED_METADATA_PREFIX + "additional embedded metadata";
     private static final String TEST_TXT_PATH = "/test-documents/testTXT.txt";
 
     private TemporaryResources tmp = new TemporaryResources();
@@ -87,8 +89,9 @@ public class ExternalEmbedderTest extends TestCase {
      * @param fieldName
      * @return a prefix added to the field name
      */
-    protected String getExpectedMetadataValueString(String fieldName) {
-        return EXPECTED_METADATA_PREFIX + fieldName;
+    protected String getExpectedMetadataValueString(String fieldName, Date timestamp) {
+        return this.getClass().getSimpleName() + " embedded " + fieldName +
+                " on " + EXPECTED_METADATA_DATE_FORMATTER.format(timestamp);
     }
 
     /**
@@ -97,9 +100,10 @@ public class ExternalEmbedderTest extends TestCase {
      *
      * @return the populated tika metadata object
      */
-    protected Metadata getMetadataToEmbed() {
+    protected Metadata getMetadataToEmbed(Date timestamp) {
         Metadata metadata = new Metadata();
-        metadata.add(TikaCoreProperties.DESCRIPTION, EXPECTED_APPENDED_METADATA);
+        metadata.add(TikaCoreProperties.DESCRIPTION,
+                getExpectedMetadataValueString(TikaCoreProperties.DESCRIPTION.toString(), timestamp));
         return metadata;
     }
 
@@ -151,14 +155,15 @@ public class ExternalEmbedderTest extends TestCase {
      * @param isResultExpectedInOutput whether or not results are expected in command line output
      */
     protected void embedInTempFile(boolean isResultExpectedInOutput) {
-        Metadata metadataToEmbed = getMetadataToEmbed();
+        Date timestamp = new Date();
+        Metadata metadataToEmbed = getMetadataToEmbed(timestamp);
         Embedder embedder = getEmbedder();
 
         try {
             // Get the input stream for the test document
             InputStream origInputStream = getOriginalInputStream();
-            File tempFile = tmp.createTemporaryFile();
-            FileOutputStream tempFileOutputStream = new FileOutputStream(tempFile);
+            File tempOutputFile = tmp.createTemporaryFile();
+            FileOutputStream tempFileOutputStream = new FileOutputStream(tempOutputFile);
 
             // Embed the metadata into a copy of the original output stream
             embedder.embed(metadataToEmbed, origInputStream, tempFileOutputStream, null);
@@ -176,7 +181,7 @@ public class ExternalEmbedderTest extends TestCase {
             Metadata embeddedMetadata = new Metadata();
 
             // Setup a re-read of the now embeded temp file
-            FileInputStream embeddedFileInputStream = new FileInputStream(tempFile);
+            FileInputStream embeddedFileInputStream = new FileInputStream(tempOutputFile);
 
             parser.parse(embeddedFileInputStream, handler, embeddedMetadata,
                     context);

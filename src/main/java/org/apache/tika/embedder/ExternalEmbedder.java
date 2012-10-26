@@ -17,7 +17,6 @@
 package org.apache.tika.embedder;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -297,13 +296,13 @@ public class ExternalEmbedder implements Embedder {
 
         boolean inputToStdIn = true;
         boolean outputFromStdOut = true;
-        boolean hasMetadataCommandArguments = (metadataCommandArguments != null && !metadataCommandArguments
-                .isEmpty());
+        boolean hasMetadataCommandArguments =
+                (metadataCommandArguments != null && !metadataCommandArguments.isEmpty());
         boolean serializeMetadataCommandArgumentsToken = false;
         boolean replacedMetadataCommandArgumentsToken = false;
 
         TikaInputStream tikaInputStream = TikaInputStream.get(inputStream);
-        File tempFile = null;
+        File tempOutputFile = null;
 
         List<String> commandMetadataSegments = null;
         if (hasMetadataCommandArguments) {
@@ -316,15 +315,16 @@ public class ExternalEmbedder implements Embedder {
         for (String commandSegment : origCmd) {
             if (commandSegment.indexOf(ExternalParser.INPUT_FILE_TOKEN) != -1) {
                 commandSegment = commandSegment.replace(
-                        ExternalParser.INPUT_FILE_TOKEN, tikaInputStream
-                                .getFile().toString());
+                        ExternalParser.INPUT_FILE_TOKEN,
+                        tikaInputStream.getFile().toString());
                 inputToStdIn = false;
             }
             if (commandSegment.indexOf(ExternalParser.OUTPUT_FILE_TOKEN) != -1) {
-                tempFile = tmp.createTemporaryFile();
-                outputFromStdOut = false;
+                tempOutputFile = tmp.createTemporaryFile();
                 commandSegment = commandSegment.replace(
-                        ExternalParser.OUTPUT_FILE_TOKEN, tempFile.toString());
+                        ExternalParser.OUTPUT_FILE_TOKEN,
+                        tempOutputFile.toString());
+                outputFromStdOut = false;
             }
             if (commandSegment
                     .indexOf(METADATA_COMMAND_ARGUMENTS_SERIALIZED_TOKEN) != -1) {
@@ -343,8 +343,7 @@ public class ExternalEmbedder implements Embedder {
         }
         if (hasMetadataCommandArguments) {
             if (serializeMetadataCommandArgumentsToken) {
-                // Find all metadata tokens and replace with encapsulated
-                // metadata
+                // Find all metadata tokens and replace with encapsulated metadata
                 int i = 0;
                 for (String commandSegment : cmd) {
                     if (commandSegment
@@ -366,13 +365,14 @@ public class ExternalEmbedder implements Embedder {
         // Execute
         Process process;
         if (cmd.toArray().length == 1) {
-            process = Runtime.getRuntime()
-                    .exec(cmd.toArray(new String[] {})[0]);
+            process = Runtime.getRuntime().exec(cmd.toArray(new String[] {})[0]);
         } else {
             process = Runtime.getRuntime().exec(cmd.toArray(new String[] {}));
         }
 
         try {
+            ignoreStdErr(process);
+
             if (inputToStdIn) {
                 sendInputStreamToStdIn(inputStream, process);
             } else {
@@ -380,12 +380,8 @@ public class ExternalEmbedder implements Embedder {
                 process.getOutputStream().close();
             }
 
-            InputStream commandStdOut = process.getInputStream();
-            InputStream commandErrOut = process.getErrorStream();
-            ignoreStream(commandErrOut);
-
             if (outputFromStdOut) {
-                multiThreadedStreamCopy(commandStdOut, outputStream);
+                sendStdOutToOutputStream(process, outputStream);
             } else {
                 tmp.dispose();
                 try {
@@ -393,9 +389,9 @@ public class ExternalEmbedder implements Embedder {
                 } catch (InterruptedException ignore) {
                 }
                 // The command is finished, read the output file into the given output stream
-                FileInputStream tempFileInputStream = new FileInputStream(
-                        tempFile);
-                multiThreadedStreamCopy(tempFileInputStream, outputStream);
+                InputStream tempOutputFileInputStream = TikaInputStream.get(tempOutputFile);
+                IOUtils.copy(tempOutputFileInputStream, outputStream);
+//                multiThreadedStreamCopy(tempFileInputStream, outputStream);
             }
         } finally {
             if (outputFromStdOut) {
@@ -406,7 +402,7 @@ public class ExternalEmbedder implements Embedder {
             } else {
                 try {
                     // Clean up temp output files
-                    tempFile.delete();
+                    tempOutputFile.delete();
                 } catch (Exception e) {
                 }
             }
@@ -414,6 +410,7 @@ public class ExternalEmbedder implements Embedder {
                 // Clean up temp input files
                 tikaInputStream.getFile().delete();
             }
+            IOUtils.closeQuietly(outputStream);
         }
 
     }
@@ -424,32 +421,54 @@ public class ExternalEmbedder implements Embedder {
      * @param inputStream the source input stream
      * @param outputStream the target output stream
      */
-    private void multiThreadedStreamCopy(final InputStream inputStream,
+    private void multiThreadedStreamCopy(
+            final InputStream inputStream,
             final OutputStream outputStream) {
         new Thread(new Runnable() {
             public void run() {
                 try {
                     IOUtils.copy(inputStream, outputStream);
                 } catch (IOException e) {
-                } finally {
-                    IOUtils.closeQuietly(inputStream);
+                    System.out.println("ERROR: " + e.getMessage());
                 }
             }
         }).start();
     }
 
     /**
-     * Starts a thread that sends the contents of the given input stream to the
-     * standard input stream of the given process. Potential exceptions are
-     * ignored, and the standard input stream is closed once fully processed.
+     * Sends the contents of the given input stream to the
+     * standard input of the given process. Potential exceptions are
+     * ignored.
+     * <p>
      * Note that the given input stream is <em>not</em> closed by this method.
+     *
+     * @param process the process
+     * @param inputStream the input stream to send to standard input of the process
+     */
+    private void sendInputStreamToStdIn(
+            final InputStream inputStream,
+            final Process process) {
+        multiThreadedStreamCopy(inputStream, process.getOutputStream());
+    }
+
+    /**
+     * Sends the standard output of the given
+     * process to the given output stream. Potential exceptions are
+     * ignored.
+     * <p>
+     * Note that the given output stream is <em>not</em> closed by this method.
      *
      * @param process the process
      * @param stream the input stream to send to standard input of the process
      */
-    private void sendInputStreamToStdIn(final InputStream stream,
-            final Process process) {
-        multiThreadedStreamCopy(stream, process.getOutputStream());
+    private void sendStdOutToOutputStream(
+            final Process process,
+            final OutputStream outputStream) {
+        try {
+            IOUtils.copy(process.getInputStream(), outputStream);
+        } catch (IOException e) {
+            System.out.println("ERROR: " + e.getMessage());
+        }
     }
 
     /**
@@ -459,8 +478,8 @@ public class ExternalEmbedder implements Embedder {
      *
      * @param process the process
      */
-    private void ignoreStream(final InputStream stream) {
-        multiThreadedStreamCopy(stream, new NullOutputStream());
+    private void ignoreStdErr(final Process process) {
+        multiThreadedStreamCopy(process.getErrorStream(), new NullOutputStream());
     }
 
     /**
