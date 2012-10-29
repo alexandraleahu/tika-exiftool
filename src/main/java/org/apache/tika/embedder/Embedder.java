@@ -57,7 +57,29 @@ public interface Embedder extends Serializable {
      * Information about the parsing context can be passed in the context
      * parameter. See the parser implementations for the kinds of context
      * information they expect.
-     *
+     * <p>
+     * In general implementations should favor preserving the source file's metadata 
+     * unless an update to a field is explicitly defined in the Metadata object.
+     * More specifically:
+     * <ul>
+     *  <li>Embedder implementations should only attempt to update metadata fields
+     *  present in the given Metadata object.  Other fields should be left untouched.</li>
+     *  <li>Embedder implementations should set properties as empty when the 
+     *  corresponding field in the Metadata object is an empty string, i.e. ""</li>
+     *  <li>Embedder implementations should nullify or delete properties 
+     *  corresponding to fields with a null value in the given Metadata object.</li>
+     *  <li>Embedder implementations should set the property 
+     *  corresponding to a particular field in the given Metadata object in all 
+     *  metadata containers whenever possible and appropriate for the file format at the time. 
+     *  If a particular metadata container falls out of use and/or is superseded by another 
+     *  (such as IIC vs XMP for IPTC) it is up to the implementation to decide if and when 
+     *  to cease embedding in the alternate container.</li>
+     *  <li>Embedder implementations should attempt to embed as much of the metadata 
+     *  as accurately as possible. An implementation may choose a strict approach 
+     *  and throw an exception if a value to be embedded exceeds the length allowed 
+     *  or may choose to truncate the value.</li>
+     * </ul>
+     * 
      * @param metadata document metadata (input and output)
      * @param originalStream the document stream (input)
      * @param outputStream the output stream to write the metadata embedded data to
