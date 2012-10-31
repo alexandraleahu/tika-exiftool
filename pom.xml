@@ -28,7 +28,7 @@
   <artifactId>tika-exiftool</artifactId>
   <packaging>jar</packaging>
   <name>Apache Tika ExifTool</name>
-  <version>1.3-20121026</version>
+  <version>1.3-20121030</version>
   <url>http://tika.apache.org/</url>
 
   <properties>
