@@ -12,4 +12,5 @@ Requirements
 ============
 
 ExifTool must be installed.  You can specify the full path to the command line in 
-`tika.exiftool.properties` or `tika.exiftool.override.properties`.
+`org/apache/tika/parser/exiftool/tika.exiftool.properties` or 
+`org/apache/tika/parser/exiftool/tika.exiftool.override.properties`.

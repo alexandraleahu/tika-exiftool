@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2005-2012 Alfresco Software Limited.
- * 
+ * Copyright (C) 2005-2013 Alfresco Software Limited.
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -36,105 +36,105 @@ import org.xml.sax.ContentHandler;
  *
  */
 public class ExiftoolIptcMetadataExtractor extends AbstractExiftoolMetadataExtractor {
-	
-	
-	public ExiftoolIptcMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes) {
-    	super(metadata, supportedTypes);
+
+
+    public ExiftoolIptcMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes) {
+        super(metadata, supportedTypes);
     }
-    
+
     public ExiftoolIptcMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes, String runtimeExiftoolExecutable) {
-    	super(metadata, supportedTypes, runtimeExiftoolExecutable);
+        super(metadata, supportedTypes, runtimeExiftoolExecutable);
     }
 
-	/**
-	 * Gets a parser responsible for extracting metadata from the XML output of the ExifTool external parser.
-	 *
-	 * @return the XML parser
-	 */
-	@Override
-	protected Parser getXmlResponseParser() {
-		return new ExiftoolIptcXmlParser(new ExiftoolTikaIptcMapper());
-	}
-	
-	@Override
-	public QName getQName(Property exiftoolProperty) {
-		QName qName = super.getQName(exiftoolProperty);
-		if (qName != null) {
-			return qName;
-		}
-		
-		String prefix = null;
-		String namespaceUrl = null;
-		if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_IPTC)) {
-			prefix = ExifToolMetadata.PREFIX_IPTC;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_IPTC;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_CORE)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_IPTC_CORE;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_CORE;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_EXT)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_IPTC_EXT;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_EXT;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PHOTOSHOP)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_PHOTOSHOP;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PHOTOSHOP;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PLUS)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_PLUS;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PLUS;
-		}
-		if (prefix != null && namespaceUrl != null) {
-			return new QName(namespaceUrl, exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, ""), prefix);
-		}
-		return null;
-	}
+    /**
+     * Gets a parser responsible for extracting metadata from the XML output of the ExifTool external parser.
+     *
+     * @return the XML parser
+     */
+    @Override
+    protected Parser getXmlResponseParser() {
+        return new ExiftoolIptcXmlParser(new ExiftoolTikaIptcMapper());
+    }
 
-	/**
-	 * Extension of <code>XMLParser</code> which provides a {@link ContentHandler} which
-	 * recognizes ExifTool's namespaces and elements.
-	 *
-	 * @author rgauss
-	 *
-	 */
-	public class ExiftoolIptcXmlParser extends AbstractExiftoolXmlParser {
+    @Override
+    public QName getQName(Property exiftoolProperty) {
+        QName qName = super.getQName(exiftoolProperty);
+        if (qName != null) {
+            return qName;
+        }
 
-		private static final long serialVersionUID = -8633426227113109506L;
-		
-		public ExiftoolIptcXmlParser(ExiftoolTikaMapper exiftoolTikaMapper) {
-			super(exiftoolTikaMapper);
-		}
+        String prefix = null;
+        String namespaceUrl = null;
+        if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_IPTC)) {
+            prefix = ExifToolMetadata.PREFIX_IPTC;
+            namespaceUrl = ExifToolMetadata.NAMESPACE_URI_IPTC;
+        } else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_CORE)) {
+            prefix = ExifToolMetadata.PREFIX_XMP_IPTC_CORE;
+            namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_CORE;
+        } else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_IPTC_EXT)) {
+            prefix = ExifToolMetadata.PREFIX_XMP_IPTC_EXT;
+            namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_IPTC_EXT;
+        } else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PHOTOSHOP)) {
+            prefix = ExifToolMetadata.PREFIX_XMP_PHOTOSHOP;
+            namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PHOTOSHOP;
+        } else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_PLUS)) {
+            prefix = ExifToolMetadata.PREFIX_XMP_PLUS;
+            namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_PLUS;
+        }
+        if (prefix != null && namespaceUrl != null) {
+            return new QName(namespaceUrl, exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, ""), prefix);
+        }
+        return null;
+    }
 
-		@Override
-	    protected ContentHandler getContentHandler(
-	            ContentHandler handler, Metadata metadata, ParseContext context) {
+    /**
+     * Extension of <code>XMLParser</code> which provides a {@link ContentHandler} which
+     * recognizes ExifTool's namespaces and elements.
+     *
+     * @author rgauss
+     *
+     */
+    public class ExiftoolIptcXmlParser extends AbstractExiftoolXmlParser {
 
-			Set<ContentHandler> contentHandlers = new HashSet<ContentHandler>();
-			contentHandlers.add(super.getContentHandler(handler, metadata, context));
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_IPTC) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_DC) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_IPTC_CORE) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_IPTC_EXT) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_PHOTOSHOP) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_PLUS) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_XMP) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
-			for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_XMPRIGHTS) {
-				contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
-			}
+        private static final long serialVersionUID = -8633426227113109506L;
 
-	        return new TeeContentHandler(contentHandlers.toArray(new ContentHandler[] {}));
-	    }
-	}
+        public ExiftoolIptcXmlParser(ExiftoolTikaMapper exiftoolTikaMapper) {
+            super(exiftoolTikaMapper);
+        }
+
+        @Override
+        protected ContentHandler getContentHandler(
+                ContentHandler handler, Metadata metadata, ParseContext context) {
+
+            Set<ContentHandler> contentHandlers = new HashSet<ContentHandler>();
+            contentHandlers.add(super.getContentHandler(handler, metadata, context));
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_IPTC) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_DC) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_IPTC_CORE) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_IPTC_EXT) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_PHOTOSHOP) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_PLUS) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_XMP) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            for (Property property : ExifToolMetadata.PROPERTY_GROUP_XMP_XMPRIGHTS) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+
+            return new TeeContentHandler(contentHandlers.toArray(new ContentHandler[] {}));
+        }
+    }
 
 }

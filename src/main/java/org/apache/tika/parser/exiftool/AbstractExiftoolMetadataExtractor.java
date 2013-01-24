@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2005-2012 Alfresco Software Limited.
- * 
+ * Copyright (C) 2005-2013 Alfresco Software Limited.
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -57,61 +57,67 @@ import org.xml.sax.SAXException;
  *
  */
 public abstract class AbstractExiftoolMetadataExtractor {
-	/**
-	 * Logger for this class
-	 */
-	private static final Log logger = LogFactory.getLog(AbstractExiftoolMetadataExtractor.class);
+    
+    private static final Log logger = LogFactory.getLog(AbstractExiftoolMetadataExtractor.class);
 
-	private static final String DEFAULT_CHARSET = "UTF-8";
+    private static final String DEFAULT_CHARSET = "UTF-8";
 
     private final Metadata metadata;
     private final Set<MediaType> supportedTypes;
     private final String runtimeExiftoolExecutable;
 
     public AbstractExiftoolMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes) {
-    	this.metadata = metadata;
-    	this.supportedTypes = supportedTypes;
-    	this.runtimeExiftoolExecutable = null;
+        this.metadata = metadata;
+        this.supportedTypes = supportedTypes;
+        this.runtimeExiftoolExecutable = null;
     }
-    
+
     public AbstractExiftoolMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes, String runtimeExiftoolExecutable) {
-    	this.metadata = metadata;
-    	this.supportedTypes = supportedTypes;
-    	if (runtimeExiftoolExecutable != null && !runtimeExiftoolExecutable.equals("")) {
-    		this.runtimeExiftoolExecutable = runtimeExiftoolExecutable;
-    	} else {
-    		this.runtimeExiftoolExecutable = null;
-    	}
+        this.metadata = metadata;
+        this.supportedTypes = supportedTypes;
+        if (runtimeExiftoolExecutable != null && !runtimeExiftoolExecutable.equals("")) {
+            this.runtimeExiftoolExecutable = runtimeExiftoolExecutable;
+        } else {
+            this.runtimeExiftoolExecutable = null;
+        }
     }
 
+    /**
+     * Gets an ExifTool {@link ExternalParser} to do the work of extracting the metadata in the
+     * image into XML format.
+     *
+     * @return an ExifTool <code>ExternalParser</code>
+     */
+    protected Parser getFileParser() {
+        ExternalParser parser = new ExternalParser();
+        parser.setCommand(new String[] {
+                ExecutableUtils.getExiftoolExecutable(runtimeExiftoolExecutable),
+                "-X",
+                ExternalParser.INPUT_FILE_TOKEN });
+        parser.setSupportedTypes(supportedTypes);
+        return parser;
+    }
 
-	/**
-	 * Gets an ExifTool {@link ExternalParser} to do the work of extracting the metadata in the
-	 * image into XML format.
-	 *
-	 * @return an ExifTool <code>ExternalParser</code>
-	 */
-	protected Parser getFileParser() {
-		ExternalParser parser = new ExternalParser();
-    	parser.setCommand(new String[] { 
-    			ExecutableUtils.getExiftoolExecutable(runtimeExiftoolExecutable), 
-    			"-X", 
-    			ExternalParser.INPUT_FILE_TOKEN });
-    	parser.setSupportedTypes(supportedTypes);
-    	return parser;
-	}
+    /**
+     * Gets a parser responsible for extracting metadata from the XML output of the ExifTool external parser.
+     *
+     * @return the XML parser
+     */
+    protected abstract Parser getXmlResponseParser();
 
-	/**
-	 * Gets a parser responsible for extracting metadata from the XML output of the ExifTool external parser.
-	 *
-	 * @return the XML parser
-	 */
-	protected abstract Parser getXmlResponseParser();
+    /**
+     * Parsers the given input stream for XML output then sends it 
+     * to an XML response parser to set metadata values.
+     * 
+     * @param stream
+     * @throws IOException
+     * @throws SAXException
+     * @throws TikaException
+     */
+    public void parse(InputStream stream) throws IOException,
+            SAXException, TikaException {
 
-	public void parse(InputStream stream) throws IOException,
-			SAXException, TikaException {
-
-		ParseContext fileContext = new ParseContext();
+        ParseContext fileContext = new ParseContext();
         Parser fileParser = getFileParser();
         fileContext.set(Parser.class, fileParser);
 
@@ -120,132 +126,132 @@ public abstract class AbstractExiftoolMetadataExtractor {
         ContentHandler fileHandler = new BodyContentHandler(outputWriter);
 
         if (logger.isDebugEnabled()) {
-        	logger.debug("parsing file for XML output");
+            logger.debug("parsing file for XML output");
         }
 
         try {
-	        fileParser.parse(stream, fileHandler, metadata, fileContext);
+            fileParser.parse(stream, fileHandler, metadata, fileContext);
 
-	        if (logger.isTraceEnabled()) {
-		    	logger.trace("XML output:\n" + result.toString(DEFAULT_CHARSET));
-	        }
+            if (logger.isTraceEnabled()) {
+                logger.trace("XML output:\n" + result.toString(DEFAULT_CHARSET));
+            }
 
-	        ByteArrayInputStream xmlInputStream = new ByteArrayInputStream(result.toByteArray());
+            ByteArrayInputStream xmlInputStream = new ByteArrayInputStream(result.toByteArray());
 
-	        ParseContext xmlResponseContext = new ParseContext();
-	        Parser xmlResponseParser = getXmlResponseParser();
-	        xmlResponseContext.set(Parser.class, xmlResponseParser);
-	        ContentHandler xmlResponseHandler = new BodyContentHandler();
+            ParseContext xmlResponseContext = new ParseContext();
+            Parser xmlResponseParser = getXmlResponseParser();
+            xmlResponseContext.set(Parser.class, xmlResponseParser);
+            ContentHandler xmlResponseHandler = new BodyContentHandler();
 
-	        if (logger.isDebugEnabled()) {
-	        	logger.debug("parsing XML output for metadata");
-	        }
-	        xmlResponseParser.parse(xmlInputStream, xmlResponseHandler, metadata, xmlResponseContext);
+            if (logger.isDebugEnabled()) {
+                logger.debug("parsing XML output for metadata");
+            }
+            xmlResponseParser.parse(xmlInputStream, xmlResponseHandler, metadata, xmlResponseContext);
         } catch (IOException e) {
-        	if (logger.isWarnEnabled()) {
-        		logger.warn("exiftool may not be be available: " + e.getMessage());
-        	}
+            if (logger.isWarnEnabled()) {
+                logger.warn("exiftool may not be be available: " + e.getMessage());
+            }
         }
-	}
+    }
 
-	/**
-	 * Constructs a full {@link QName} from the given <code>exiftoolProperty</code>
-	 *
-	 * @param exiftoolProperty
-	 * @return the full QName for the property
-	 */
-	public QName getQName(Property exiftoolProperty) {
-		String prefix = null;
-		String namespaceUrl = null;
-		if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_DC)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_DC;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_DC;
-		} else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_XMP_RIGHTS)) {
-			prefix = ExifToolMetadata.PREFIX_XMP_XMP_RIGHTS;
-			namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_XMP_RIGHTS;
-		}
-		if (prefix != null && namespaceUrl != null) {
-			return new QName(namespaceUrl, exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, ""), prefix);
-		}
-		return null;
-	}
+    /**
+     * Constructs a full {@link QName} from the given <code>exiftoolProperty</code>
+     *
+     * @param exiftoolProperty
+     * @return the full QName for the property
+     */
+    public QName getQName(Property exiftoolProperty) {
+        String prefix = null;
+        String namespaceUrl = null;
+        if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_DC)) {
+            prefix = ExifToolMetadata.PREFIX_XMP_DC;
+            namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_DC;
+        } else if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_XMP_RIGHTS)) {
+            prefix = ExifToolMetadata.PREFIX_XMP_XMP_RIGHTS;
+            namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_XMP_RIGHTS;
+        }
+        if (prefix != null && namespaceUrl != null) {
+            return new QName(namespaceUrl, exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, ""), prefix);
+        }
+        return null;
+    }
 
-	/**
-	 * Extension of <code>XMLParser</code> which provides a {@link ContentHandler} which
-	 * recognizes ExifTool's namespaces and elements.
-	 *
-	 * @author rgauss
-	 *
-	 */
-	public abstract class AbstractExiftoolXmlParser extends XMLParser {
+    /**
+     * Extension of <code>XMLParser</code> which provides a {@link ContentHandler} which
+     * recognizes ExifTool's namespaces and elements.
+     *
+     * @author rgauss
+     *
+     */
+    public abstract class AbstractExiftoolXmlParser extends XMLParser {
 
-		private static final long serialVersionUID = 4937561608422796636L;
-		
-		private ExiftoolTikaMapper exiftoolTikaMapper;
-		
-		public AbstractExiftoolXmlParser(ExiftoolTikaMapper exiftoolTikaMapper) {
-			super();
-			this.exiftoolTikaMapper = exiftoolTikaMapper;
-		}
+        private static final long serialVersionUID = 4937561608422796636L;
 
-		public ExiftoolTikaMapper getExiftoolTikaMapper() {
-			return exiftoolTikaMapper;
-		}
+        private ExiftoolTikaMapper exiftoolTikaMapper;
 
-		public void setExiftoolTikaMapper(ExiftoolTikaMapper exiftoolTikaMapper) {
-			this.exiftoolTikaMapper = exiftoolTikaMapper;
-		}
+        public AbstractExiftoolXmlParser(ExiftoolTikaMapper exiftoolTikaMapper) {
+            super();
+            this.exiftoolTikaMapper = exiftoolTikaMapper;
+        }
 
-		/**
-		 * Gets an element handler for the given <code>Property</code> and <code>QName</code>.
-		 *
-		 * @param property
-		 * @param metadata
-		 * @param qName
-		 * @param tikaMetadata
-		 * @return
-		 */
-		protected ContentHandler getElementMetadataHandler(
-				Property property, Metadata metadata, QName qName, Object tikaMetadata) {
-			if (tikaMetadata != null && tikaMetadata instanceof Property) {
-				return new ElementMetadataHandler(
-	                    qName.getNamespaceURI(),
-	                    qName.getLocalPart(),
-	                    metadata,
-	                    (Property) tikaMetadata);
-			} else {
-				return new ElementMetadataHandler(
-	                    qName.getNamespaceURI(),
-	                    qName.getLocalPart(),
-	                    metadata,
-	                    (String) tikaMetadata);
-			}
-		}
+        public ExiftoolTikaMapper getExiftoolTikaMapper() {
+            return exiftoolTikaMapper;
+        }
 
-		/**
-		 * Gets the element handlers for the given <code>property</code>
-		 *
-		 * @param property
-		 * @param metadata
-		 * @return the element handler
-		 */
-		protected Collection<ContentHandler> getElementMetadataHandlers(Property property, Metadata metadata) {
-			ArrayList<ContentHandler> handlers = new ArrayList<ContentHandler>();
-			QName qName = getQName(property);
-			if (qName != null) {
-				if (getExiftoolTikaMapper().getExiftoolToTikaMetadataMap().get(property) != null) {
-					for (Object tikaMetadata : getExiftoolTikaMapper().getExiftoolToTikaMetadataMap().get(property)) {
-						handlers.add(getElementMetadataHandler(property, metadata, qName, tikaMetadata));
-					}
-				} else {
-					if (logger.isTraceEnabled()) {
-			    		logger.trace("no tikaMetadata found for " + property.getName());
-			    	}
-				}
-			}
-			return handlers;
-		}
-		
-	}
+        public void setExiftoolTikaMapper(ExiftoolTikaMapper exiftoolTikaMapper) {
+            this.exiftoolTikaMapper = exiftoolTikaMapper;
+        }
+
+        /**
+         * Gets an element handler for the given <code>Property</code> and <code>QName</code>.
+         *
+         * @param property
+         * @param metadata
+         * @param qName
+         * @param tikaMetadata
+         * @return
+         */
+        protected ContentHandler getElementMetadataHandler(
+                Property property, Metadata metadata, QName qName, Object tikaMetadata) {
+            if (tikaMetadata != null && tikaMetadata instanceof Property) {
+                return new ElementMetadataHandler(
+                        qName.getNamespaceURI(),
+                        qName.getLocalPart(),
+                        metadata,
+                        (Property) tikaMetadata);
+            } else {
+                return new ElementMetadataHandler(
+                        qName.getNamespaceURI(),
+                        qName.getLocalPart(),
+                        metadata,
+                        (String) tikaMetadata);
+            }
+        }
+
+        /**
+         * Gets the element handlers for the given <code>property</code>
+         *
+         * @param property
+         * @param metadata
+         * @return the element handler
+         */
+        protected Collection<ContentHandler> getElementMetadataHandlers(Property property, Metadata metadata) {
+            ArrayList<ContentHandler> handlers = new ArrayList<ContentHandler>();
+            QName qName = getQName(property);
+            if (qName != null) {
+                if (getExiftoolTikaMapper().getExiftoolToTikaMetadataMap().get(property) != null) {
+                    for (Object tikaMetadata : getExiftoolTikaMapper().getExiftoolToTikaMetadataMap().get(property)) {
+                        handlers.add(getElementMetadataHandler(property, metadata, qName, tikaMetadata));
+                    }
+                } else {
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("no tikaMetadata found for " + property.getName());
+                    }
+                }
+            }
+            return handlers;
+        }
+
+    }
 
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2005-2012 Alfresco Software Limited.
- * 
+ * Copyright (C) 2005-2013 Alfresco Software Limited.
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -47,9 +47,9 @@ import org.xml.sax.SAXException;
  */
 public class ExiftoolImageParser extends AbstractParser {
 
-	private static final long serialVersionUID = 1469157231567542637L;
-	
-	private String exiftoolExecutable;
+    private static final long serialVersionUID = 1469157231567542637L;
+
+    private String exiftoolExecutable;
 
     private static final Set<MediaType> SUPPORTED_TYPES =
             Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
@@ -58,45 +58,45 @@ public class ExiftoolImageParser extends AbstractParser {
                     MediaType.image("tiff"))));
 
     public Set<MediaType> getSupportedTypes(ParseContext context) {
-    	// TODO Check for availability of command line before returning?
+        // TODO Check for availability of command line before returning?
         return SUPPORTED_TYPES;
     }
-    
+
     public ExiftoolImageParser() {
-    	super();
-    }
-    
-    public ExiftoolImageParser(String exiftoolExecutable) {
-    	super();
-    	this.exiftoolExecutable = exiftoolExecutable;
+        super();
     }
 
-	public void parse(InputStream stream, ContentHandler handler,
-			Metadata metadata, ParseContext context) throws IOException,
-			SAXException, TikaException {
-		TemporaryResources tmp = new TemporaryResources();
-		try {
-			TikaInputStream tis = TikaInputStream.get(stream, tmp);
-			MediaType mediaType = MediaType.parse(metadata.get(Metadata.CONTENT_TYPE));
-			if (mediaType != null && mediaType.equals(MediaType.image("jpeg"))) {
-				new ImageMetadataExtractor(metadata).parseJpeg(tis.getFile());
-			}
-			tis.mark(Integer.MAX_VALUE);
-			ImageParser imageParser = new ImageParser();
-			if (imageParser.getSupportedTypes(context).contains(mediaType)) {
-				imageParser.parse(tis, handler, metadata, context);
-				tis.reset();
-			}
-			new JempboxExtractor(metadata).parse(tis);
-			tis.reset();
-			new ExiftoolIptcMetadataExtractor(metadata, getSupportedTypes(context), exiftoolExecutable).parse(tis);
-		} finally {
-			tmp.dispose();
-		}
+    public ExiftoolImageParser(String exiftoolExecutable) {
+        super();
+        this.exiftoolExecutable = exiftoolExecutable;
+    }
+
+    public void parse(InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context) throws IOException,
+            SAXException, TikaException {
+        TemporaryResources tmp = new TemporaryResources();
+        try {
+            TikaInputStream tis = TikaInputStream.get(stream, tmp);
+            MediaType mediaType = MediaType.parse(metadata.get(Metadata.CONTENT_TYPE));
+            if (mediaType != null && mediaType.equals(MediaType.image("jpeg"))) {
+                new ImageMetadataExtractor(metadata).parseJpeg(tis.getFile());
+            }
+            tis.mark(Integer.MAX_VALUE);
+            ImageParser imageParser = new ImageParser();
+            if (imageParser.getSupportedTypes(context).contains(mediaType)) {
+                imageParser.parse(tis, handler, metadata, context);
+                tis.reset();
+            }
+            new JempboxExtractor(metadata).parse(tis);
+            tis.reset();
+            new ExiftoolIptcMetadataExtractor(metadata, getSupportedTypes(context), exiftoolExecutable).parse(tis);
+        } finally {
+            tmp.dispose();
+        }
 
         XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
         xhtml.startDocument();
         xhtml.endDocument();
-	}
+    }
 
 }

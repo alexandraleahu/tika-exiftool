@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2012 Alfresco Software Limited.
+ * Copyright (C) 2005-2013 Alfresco Software Limited.
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

@@ -59,6 +59,8 @@ public class ExifToolImageParserTest extends TestCase {
         assertEquals("Rock Creek Park", metadata.get(IPTC.SUBLOCATION));
         assertEquals("job identifier", metadata.get(IPTC.JOB_ID));
         assertEquals("Downstream", metadata.get(IPTC.TITLE));
+        assertEquals("100-ABC-ABC-555", metadata.get(IPTC.REGISTRY_ENTRY_CREATED_ITEM_ID));
+        assertEquals("RGAUSS", metadata.get(IPTC.IMAGE_SUPPLIER_ID));
         assertEquals("A stream bank in Rock Creek Park Washington DC during a photo bike tour with ASPP DC/South chapter.", metadata.get(IPTC.DESCRIPTION));
         List<String> iptcKeywords = Arrays.asList(metadata.getValues(IPTC.KEYWORDS.getName()));
         assertTrue(iptcKeywords.contains("stream"));
