@@ -18,6 +18,7 @@
  */
 package org.apache.tika.parser.exiftool;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,6 +45,11 @@ public class ExiftoolIptcMetadataExtractor extends AbstractExiftoolMetadataExtra
 
     public ExiftoolIptcMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes, String runtimeExiftoolExecutable) {
         super(metadata, supportedTypes, runtimeExiftoolExecutable);
+    }
+    
+    public ExiftoolIptcMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes, String runtimeExiftoolExecutable,
+            Collection<Property> passthroughXmpProperties) {
+        super(metadata, supportedTypes, runtimeExiftoolExecutable, passthroughXmpProperties);
     }
 
     /**

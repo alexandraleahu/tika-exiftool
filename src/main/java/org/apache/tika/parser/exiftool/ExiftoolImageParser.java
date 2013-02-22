@@ -21,6 +21,7 @@ package org.apache.tika.parser.exiftool;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,6 +30,7 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.TemporaryResources;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -50,6 +52,7 @@ public class ExiftoolImageParser extends AbstractParser {
     private static final long serialVersionUID = 1469157231567542637L;
 
     private String exiftoolExecutable;
+    private Collection<Property> passthroughXmpProperties;
 
     private static final Set<MediaType> SUPPORTED_TYPES =
             Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
@@ -70,6 +73,12 @@ public class ExiftoolImageParser extends AbstractParser {
         super();
         this.exiftoolExecutable = exiftoolExecutable;
     }
+    
+    public ExiftoolImageParser(String exiftoolExecutable, Collection<Property> passthroughXmpProperties) {
+        super();
+        this.exiftoolExecutable = exiftoolExecutable;
+        this.passthroughXmpProperties = passthroughXmpProperties;
+    }
 
     public void parse(InputStream stream, ContentHandler handler,
             Metadata metadata, ParseContext context) throws IOException,
@@ -89,7 +98,8 @@ public class ExiftoolImageParser extends AbstractParser {
             }
             new JempboxExtractor(metadata).parse(tis);
             tis.reset();
-            new ExiftoolIptcMetadataExtractor(metadata, getSupportedTypes(context), exiftoolExecutable).parse(tis);
+            new ExiftoolIptcMetadataExtractor(
+                    metadata, getSupportedTypes(context), exiftoolExecutable, passthroughXmpProperties).parse(tis);
         } finally {
             tmp.dispose();
         }

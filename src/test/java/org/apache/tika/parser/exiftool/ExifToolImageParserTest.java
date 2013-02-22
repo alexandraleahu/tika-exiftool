@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -32,6 +33,7 @@ import junit.framework.TestCase;
 
 import org.apache.tika.metadata.IPTC;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Property;
 import org.apache.tika.metadata.TIFF;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
@@ -92,6 +94,21 @@ public class ExifToolImageParserTest extends TestCase {
         calendar.set(Calendar.MILLISECOND, 0);
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         assertEquals(calendar.getTime(), metadata.getDate(IPTC.DATE_CREATED));
+     }
+    
+    public void testJPEGCustomXmp() throws Exception {
+        Metadata metadata = new Metadata();
+        metadata.set(Metadata.CONTENT_TYPE, "image/jpeg");
+        InputStream stream =
+            getClass().getResourceAsStream("/test-documents/testJPEG_IPTC_EXT.jpg");
+        ArrayList<Property> passthroughXmpProperties = new ArrayList<Property>(2);
+        passthroughXmpProperties.add(Property.internalText("XMP-custom:Text"));
+        passthroughXmpProperties.add(Property.internalText("XMP-custom:TextML"));
+        Parser passthroughParser = new ExiftoolImageParser(null, passthroughXmpProperties);
+        passthroughParser.parse(stream, new DefaultHandler(), metadata, new ParseContext());
+
+        assertEquals("customTextField", metadata.get("XMP-custom:Text"));
+        assertEquals("customMultilineField", metadata.get("XMP-custom:TextML"));
      }
     
     public void testJPEG() throws Exception {

@@ -26,8 +26,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.namespace.QName;
@@ -42,6 +44,7 @@ import org.apache.tika.parser.external.ExternalParser;
 import org.apache.tika.parser.xml.ElementMetadataHandler;
 import org.apache.tika.parser.xml.XMLParser;
 import org.apache.tika.sax.BodyContentHandler;
+import org.apache.tika.sax.TeeContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -61,15 +64,18 @@ public abstract class AbstractExiftoolMetadataExtractor {
     private static final Log logger = LogFactory.getLog(AbstractExiftoolMetadataExtractor.class);
 
     private static final String DEFAULT_CHARSET = "UTF-8";
+    private static final MessageFormat FORMAT_EXIFTOOL_XMP_NAMESPACE = new MessageFormat("http://ns.exiftool.ca/XMP/{0}/1.0/");
 
     private final Metadata metadata;
     private final Set<MediaType> supportedTypes;
     private final String runtimeExiftoolExecutable;
+    private final Collection<Property> passthroughXmpProperties;
 
     public AbstractExiftoolMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes) {
         this.metadata = metadata;
         this.supportedTypes = supportedTypes;
         this.runtimeExiftoolExecutable = null;
+        this.passthroughXmpProperties = null;
     }
 
     public AbstractExiftoolMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes, String runtimeExiftoolExecutable) {
@@ -80,6 +86,19 @@ public abstract class AbstractExiftoolMetadataExtractor {
         } else {
             this.runtimeExiftoolExecutable = null;
         }
+        this.passthroughXmpProperties = null;
+    }
+    
+    public AbstractExiftoolMetadataExtractor(Metadata metadata, Set<MediaType> supportedTypes, 
+            String runtimeExiftoolExecutable, Collection<Property> passthroughXmpProperties) {
+        this.metadata = metadata;
+        this.supportedTypes = supportedTypes;
+        if (runtimeExiftoolExecutable != null && !runtimeExiftoolExecutable.equals("")) {
+            this.runtimeExiftoolExecutable = runtimeExiftoolExecutable;
+        } else {
+            this.runtimeExiftoolExecutable = null;
+        }
+        this.passthroughXmpProperties = passthroughXmpProperties;
     }
 
     /**
@@ -153,6 +172,18 @@ public abstract class AbstractExiftoolMetadataExtractor {
             }
         }
     }
+    
+    /**
+     * Determines if the given exiftoolProperty is a valid XMP property
+     * definition for use with ExifTool.
+     * 
+     * @param exiftoolProperty
+     * @return whether or not the property is XMP
+     */
+    protected boolean isValidXmpProperty(Property exiftoolProperty) {
+        return (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP) &&
+                exiftoolProperty.getName().contains(ExifToolMetadata.PREFIX_DELIMITER));
+    }
 
     /**
      * Constructs a full {@link QName} from the given <code>exiftoolProperty</code>
@@ -163,6 +194,7 @@ public abstract class AbstractExiftoolMetadataExtractor {
     public QName getQName(Property exiftoolProperty) {
         String prefix = null;
         String namespaceUrl = null;
+        String name = null;
         if (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP_DC)) {
             prefix = ExifToolMetadata.PREFIX_XMP_DC;
             namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_DC;
@@ -171,7 +203,17 @@ public abstract class AbstractExiftoolMetadataExtractor {
             namespaceUrl = ExifToolMetadata.NAMESPACE_URI_XMP_XMP_RIGHTS;
         }
         if (prefix != null && namespaceUrl != null) {
-            return new QName(namespaceUrl, exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, ""), prefix);
+            name = exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, "");
+        } else {
+            if (passthroughXmpProperties != null && isValidXmpProperty(exiftoolProperty) &&
+                    passthroughXmpProperties.contains(exiftoolProperty)) {
+                prefix = exiftoolProperty.getName().split(ExifToolMetadata.PREFIX_DELIMITER)[0];
+                namespaceUrl = FORMAT_EXIFTOOL_XMP_NAMESPACE.format(new Object[] { prefix });
+                name = exiftoolProperty.getName().split(ExifToolMetadata.PREFIX_DELIMITER)[1];
+            }
+        }
+        if (prefix != null && namespaceUrl != null && name != null) {
+            return new QName(namespaceUrl, name, prefix);
         }
         return null;
     }
@@ -200,6 +242,23 @@ public abstract class AbstractExiftoolMetadataExtractor {
 
         public void setExiftoolTikaMapper(ExiftoolTikaMapper exiftoolTikaMapper) {
             this.exiftoolTikaMapper = exiftoolTikaMapper;
+        }
+
+        @Override
+        protected ContentHandler getContentHandler(
+                ContentHandler handler, Metadata metadata, ParseContext context) {
+            if (passthroughXmpProperties == null) {
+                return super.getContentHandler(handler, metadata, context);
+            }
+            
+            Set<ContentHandler> contentHandlers = new HashSet<ContentHandler>();
+            contentHandlers.add(super.getContentHandler(handler, metadata, context));
+            
+            for (Property property : passthroughXmpProperties) {
+                contentHandlers.addAll(getElementMetadataHandlers(property, metadata));
+            }
+            
+            return new TeeContentHandler(contentHandlers.toArray(new ContentHandler[] {}));
         }
 
         /**
@@ -245,8 +304,9 @@ public abstract class AbstractExiftoolMetadataExtractor {
                     }
                 } else {
                     if (logger.isTraceEnabled()) {
-                        logger.trace("no tikaMetadata found for " + property.getName());
+                        logger.trace("No tikaMetadata mapping found for " + property.getName() + ", passing through as " + qName.toString());
                     }
+                    handlers.add(getElementMetadataHandler(property, metadata, qName, property));
                 }
             }
             return handlers;

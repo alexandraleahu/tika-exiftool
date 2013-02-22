@@ -39,6 +39,7 @@ public interface ExifToolMetadata {
     String NAMESPACE_URI_XMP_XMP_RIGHTS = "http://ns.exiftool.ca/XMP/XMP-xmpRights/1.0/";
 
     String PREFIX_IPTC = "IPTC";
+    String PREFIX_XMP = "XMP-";
     String PREFIX_XMP_DC = "XMP-dc";
     String PREFIX_XMP_IPTC_CORE = "XMP-iptcCore";
     String PREFIX_XMP_IPTC_EXT = "XMP-iptcExt";
