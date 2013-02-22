@@ -174,15 +174,15 @@ public abstract class AbstractExiftoolMetadataExtractor {
     }
     
     /**
-     * Determines if the given exiftoolProperty is a valid XMP property
-     * definition for use with ExifTool.
+     * Determines if the given exiftoolPropertyName is a valid XMP property
+     * for use with ExifTool.
      * 
-     * @param exiftoolProperty
+     * @param exiftoolPropertyName
      * @return whether or not the property is XMP
      */
-    protected boolean isValidXmpProperty(Property exiftoolProperty) {
-        return (exiftoolProperty.getName().startsWith(ExifToolMetadata.PREFIX_XMP) &&
-                exiftoolProperty.getName().contains(ExifToolMetadata.PREFIX_DELIMITER));
+    public static boolean isValidXmpPropertyName(String exiftoolPropertyName) {
+        return (exiftoolPropertyName.startsWith(ExifToolMetadata.PREFIX_XMP) &&
+                exiftoolPropertyName.contains(ExifToolMetadata.PREFIX_DELIMITER));
     }
 
     /**
@@ -205,7 +205,7 @@ public abstract class AbstractExiftoolMetadataExtractor {
         if (prefix != null && namespaceUrl != null) {
             name = exiftoolProperty.getName().replace(prefix + ExifToolMetadata.PREFIX_DELIMITER, "");
         } else {
-            if (passthroughXmpProperties != null && isValidXmpProperty(exiftoolProperty) &&
+            if (passthroughXmpProperties != null && isValidXmpPropertyName(exiftoolProperty.getName()) &&
                     passthroughXmpProperties.contains(exiftoolProperty)) {
                 prefix = exiftoolProperty.getName().split(ExifToolMetadata.PREFIX_DELIMITER)[0];
                 namespaceUrl = FORMAT_EXIFTOOL_XMP_NAMESPACE.format(new Object[] { prefix });
