@@ -277,13 +277,17 @@ public abstract class AbstractExiftoolMetadataExtractor {
                         qName.getNamespaceURI(),
                         qName.getLocalPart(),
                         metadata,
-                        (Property) tikaMetadata);
+                        (Property) tikaMetadata,
+                        true,
+                        true);
             } else {
                 return new ElementMetadataHandler(
                         qName.getNamespaceURI(),
                         qName.getLocalPart(),
                         metadata,
-                        (String) tikaMetadata);
+                        (String) tikaMetadata,
+                        true,
+                        true);
             }
         }
 

@@ -137,11 +137,11 @@ public interface ExifToolMetadata {
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "CreatorPostalCode");
     Property XMP_IPTCCORE_CREATOR_CONTACT_INFO_REGION = Property.internalText(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "CreatorRegion");
-    Property XMP_IPTCCORE_CREATOR_CONTACT_INFO_EMAIL_WORK = Property.internalText(
+    Property XMP_IPTCCORE_CREATOR_CONTACT_INFO_EMAIL_WORK = Property.internalTextBag(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "CreatorWorkEmail");
-    Property XMP_IPTCCORE_CREATOR_CONTACT_INFO_TELEPHONE_WORK = Property.internalText(
+    Property XMP_IPTCCORE_CREATOR_CONTACT_INFO_TELEPHONE_WORK = Property.internalTextBag(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "CreatorWorkTelephone");
-    Property XMP_IPTCCORE_CREATOR_CONTACT_INFO_URL_WORK = Property.internalText(
+    Property XMP_IPTCCORE_CREATOR_CONTACT_INFO_URL_WORK = Property.internalTextBag(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "CreatorWorkURL");
     Property XMP_IPTCCORE_COUNTRY_CODE = Property.internalText(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "CountryCode");
@@ -149,24 +149,24 @@ public interface ExifToolMetadata {
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "IntellectualGenre");
     Property XMP_IPTCCORE_LOCATION = Property.internalText(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "Location");
-    Property XMP_IPTCCORE_SCENE = Property.internalText(
+    Property XMP_IPTCCORE_SCENE = Property.internalTextBag(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "Scene");
     Property XMP_IPTCCORE_SUBJECT_CODE = Property.internalTextBag(
             PREFIX_XMP_IPTC_CORE + PREFIX_DELIMITER + "SubjectCode");
 
     Property XMP_IPTCEXT_ADDITIONAL_MODEL_INFORMATION = Property.internalText(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "AdditionalModelInformation");
-    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_COPYRIGHT_NOTICE = Property.internalText(
+    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_COPYRIGHT_NOTICE = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "ArtworkCopyrightNotice");
-    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_CREATOR = Property.internalText(
+    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_CREATOR = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "ArtworkCreator");
-    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_DATE_CREATED = Property.internalDate(
+    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_DATE_CREATED = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "ArtworkDateCreated");
-    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_SOURCE = Property.internalText(
+    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_SOURCE = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "ArtworkSource");
-    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_SOURCE_INVENTORY_NO = Property.internalText(
+    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_SOURCE_INVENTORY_NO = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "ArtworkSourceInventoryNo");
-    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_TITLE = Property.internalText(
+    Property XMP_IPTCEXT_ARTWORK_OR_OBJECT_TITLE = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "ArtworkTitle");
     Property XMP_IPTCEXT_CONTROLLED_VOCABULAR_TERM = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "ControlledVocabularyTerm");
@@ -190,17 +190,17 @@ public interface ExifToolMetadata {
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationCreatedSublocation");
     Property XMP_IPTCEXT_LOCATION_CREATED_WORLD_REGION = Property.internalText(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationCreatedWorldRegion");
-    Property XMP_IPTCEXT_LOCATION_SHOWN_CITY = Property.internalText(
+    Property XMP_IPTCEXT_LOCATION_SHOWN_CITY = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationShownCity");
-    Property XMP_IPTCEXT_LOCATION_SHOWN_COUNTRY_CODE = Property.internalText(
+    Property XMP_IPTCEXT_LOCATION_SHOWN_COUNTRY_CODE = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationShownCountryCode");
-    Property XMP_IPTCEXT_LOCATION_SHOWN_COUNTRY_NAME = Property.internalText(
+    Property XMP_IPTCEXT_LOCATION_SHOWN_COUNTRY_NAME = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationShownCountryName");
-    Property XMP_IPTCEXT_LOCATION_SHOWN_PROVINCE_STATE = Property.internalText(
-            PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationCreatedProvinceState");
-    Property XMP_IPTCEXT_LOCATION_SHOWN_SUBLOCATION = Property.internalText(
+    Property XMP_IPTCEXT_LOCATION_SHOWN_PROVINCE_STATE = Property.internalTextBag(
+            PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationShownProvinceState");
+    Property XMP_IPTCEXT_LOCATION_SHOWN_SUBLOCATION = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationShownSublocation");
-    Property XMP_IPTCEXT_LOCATION_SHOWN_WORLD_REGION = Property.internalText(
+    Property XMP_IPTCEXT_LOCATION_SHOWN_WORLD_REGION = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "LocationShownWorldRegion");
     Property XMP_IPTCEXT_MAX_AVAIL_HEIGHT = Property.internalInteger(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "MaxAvailHeight");
@@ -214,9 +214,9 @@ public interface ExifToolMetadata {
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "OrganisationInImageName");
     Property XMP_IPTCEXT_PERSON_IN_IMAGE = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "PersonInImage");
-    Property XMP_IPTCEXT_REGISTRY_ITEM_ID = Property.internalText(
+    Property XMP_IPTCEXT_REGISTRY_ITEM_ID = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "RegistryItemID");
-    Property XMP_IPTCEXT_REGISTRY_ORGANISATION_ID = Property.internalText(
+    Property XMP_IPTCEXT_REGISTRY_ORGANISATION_ID = Property.internalTextBag(
             PREFIX_XMP_IPTC_EXT + PREFIX_DELIMITER + "RegistryOrganisationID");
 
     Property XMP_PHOTOSHOP_AUTHORS_POSITION = Property.internalText(
