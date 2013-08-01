@@ -29,6 +29,7 @@ import java.util.Set;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.TemporaryResources;
 import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.IPTC;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
@@ -96,8 +97,15 @@ public class ExiftoolImageParser extends AbstractParser {
                 imageParser.parse(tis, handler, metadata, context);
                 tis.reset();
             }
+            
+            // JempboxExtractor joins creators with comma, we want to preserve as is
+            String iptcCreator = metadata.get(IPTC.CREATOR);
+            
             new JempboxExtractor(metadata).parse(tis);
             tis.reset();
+            
+            metadata.set(IPTC.CREATOR, iptcCreator);
+            
             new ExiftoolIptcMetadataExtractor(
                     metadata, getSupportedTypes(context), exiftoolExecutable, passthroughXmpProperties).parse(tis);
         } finally {

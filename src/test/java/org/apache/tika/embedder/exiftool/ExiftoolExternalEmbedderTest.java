@@ -18,7 +18,11 @@
  */
 package org.apache.tika.embedder.exiftool;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Date;
 
 import org.apache.tika.embedder.Embedder;
@@ -88,8 +92,21 @@ public class ExiftoolExternalEmbedderTest extends ExternalEmbedderTest {
     }
 
     @Override
-    protected InputStream getOriginalInputStream() {
+    protected InputStream getSourceStandardInputStream() {
         return this.getClass().getResourceAsStream(TEST_IMAGE_PATH);
+    }
+    
+    @Override
+    protected File getSourceInputFile() throws FileNotFoundException {
+        URL origUrl = this.getClass().getResource(TEST_IMAGE_PATH);
+        if (origUrl == null) {
+            throw new FileNotFoundException("could not load " + TEST_IMAGE_PATH);
+        }
+        try {
+            return new File(origUrl.toURI());
+        } catch (URISyntaxException e) {
+            throw new FileNotFoundException(e.getMessage());
+        }
     }
 
     @Override
