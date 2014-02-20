@@ -71,10 +71,13 @@ public class ExifToolImageParserTest extends TestCase {
         assertTrue(iptcKeywords.contains("stream"));
         assertTrue(iptcKeywords.contains("park"));
         assertTrue(iptcKeywords.contains("bank"));
+        assertEquals(5, iptcKeywords.size());
         List<String> tikaKeywords = Arrays.asList(metadata.getValues(Metadata.KEYWORDS));
         assertTrue(Arrays.toString(tikaKeywords.toArray()).contains("stream"));
         assertTrue(Arrays.toString(tikaKeywords.toArray()).contains("park"));
         assertTrue(Arrays.toString(tikaKeywords.toArray()).contains("bank"));
+        assertEquals(5, tikaKeywords.size());
+        
         
         assertEquals("DC", metadata.get(IPTC.PROVINCE_OR_STATE));
         

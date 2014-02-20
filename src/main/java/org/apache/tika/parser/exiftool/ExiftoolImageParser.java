@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.tika.exception.TikaException;
@@ -32,6 +33,7 @@ import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.IPTC;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -115,6 +117,30 @@ public class ExiftoolImageParser extends AbstractParser {
         XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
         xhtml.startDocument();
         xhtml.endDocument();
+        
+        cleanDuplicateKeywords(metadata);
+    }
+    
+    /**
+     * The {@link JempboxExtractor} calls 
+     * <code>metadata.add(TikaCoreProperties.KEYWORDS, keywords.next());</code>
+     * for each keyword and <code>metadata.add</code> does not check for duplicates.
+     * The exiftool XML parsing may add them again, so we must forcibly remove duplicates
+     * using this method.
+     * 
+     * @param metadata
+     */
+    protected void cleanDuplicateKeywords(Metadata metadata) {
+        String[] keywords = metadata.getValues(TikaCoreProperties.KEYWORDS);
+        if (keywords.length == 0) {
+            return;
+        }
+        LinkedHashSet<String> cleanedKeywords = new LinkedHashSet<String>();
+        for (int i = 0; i < keywords.length; i++)
+        {
+            cleanedKeywords.add(keywords[i]);
+        }
+        metadata.set(TikaCoreProperties.KEYWORDS, cleanedKeywords.toArray(new String[] {}));
     }
 
 }

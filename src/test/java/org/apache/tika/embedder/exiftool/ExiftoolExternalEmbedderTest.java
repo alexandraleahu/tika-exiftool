@@ -34,9 +34,6 @@ import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.exiftool.ExiftoolImageParser;
 import org.apache.tika.parser.exiftool.ExiftoolTikaIptcMapper;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 /**
  * Unit test for the ExiftoolExternalEmbedder
  *
@@ -46,23 +43,6 @@ import junit.framework.TestSuite;
 public class ExiftoolExternalEmbedderTest extends ExternalEmbedderTest {
 
     private static final String TEST_IMAGE_PATH = "/test-documents/testJPEG_IPTC_EXT.jpg";
-
-    /**
-     * Create the test case
-     *
-     * @param testName
-     *            name of the test case
-     */
-    public ExiftoolExternalEmbedderTest(String testName) {
-        super(testName);
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite(ExiftoolExternalEmbedderTest.class);
-    }
 
     @Override
     protected org.apache.tika.metadata.Metadata getMetadataToEmbed(Date timestamp) {
