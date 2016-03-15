@@ -355,6 +355,11 @@ public class ExifToolImageParserTest extends TestCase {
         assertTrue(iptcKeywords.contains("garden"));
         assertTrue(iptcKeywords.contains("cat"));
         assertEquals("Cat in a garden", metadata.get(IPTC.HEADLINE));
+        assertEquals("100", metadata.get(TIFF.IMAGE_WIDTH));
+        assertEquals("75", metadata.get(TIFF.IMAGE_LENGTH));
+        assertEquals("Inch", metadata.get(TIFF.RESOLUTION_UNIT));
+        assertEquals("1", metadata.get(TIFF.ORIENTATION));
+        assertEquals("8", metadata.get(TIFF.BITS_PER_SAMPLE));        
     }
 
 }

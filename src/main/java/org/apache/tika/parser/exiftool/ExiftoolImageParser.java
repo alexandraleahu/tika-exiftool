@@ -93,6 +93,9 @@ public class ExiftoolImageParser extends AbstractParser {
             if (mediaType != null && mediaType.equals(MediaType.image("jpeg"))) {
                 new ImageMetadataExtractor(metadata).parseJpeg(tis.getFile());
             }
+			if(mediaType != null && mediaType.equals(MediaType.image("tiff"))) {
+            	new ImageMetadataExtractor(metadata).parseTiff(tis.getFile());
+            }
             tis.mark(Integer.MAX_VALUE);
             ImageParser imageParser = new ImageParser();
             if (imageParser.getSupportedTypes(context).contains(mediaType)) {
